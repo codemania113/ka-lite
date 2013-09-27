@@ -18,7 +18,6 @@ from securesync.models import Zone, Facility, Device, DeviceZone
 from shared.testing import central_server_test, BrowserTestCase
 
 
-@central_server_test
 class KALiteCentralBrowserTestCase(BrowserTestCase):
     """
     Base class for browser-based central server test cases.

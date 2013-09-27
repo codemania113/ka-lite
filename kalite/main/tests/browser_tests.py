@@ -26,7 +26,6 @@ from utils.django_utils import call_command_with_output
 from utils.general import isnumeric
 
 
-@distributed_server_test
 class KALiteDistributedBrowserTestCase(BrowserTestCase):
     """Base class for main server test cases.
     They will have different functions in here, for sure.

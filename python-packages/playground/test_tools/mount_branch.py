@@ -25,7 +25,6 @@ class KaLiteServer(object):
         "email": "admin@example.com", 
         "password": "pass",
     }
-    _pyexec = None
     lexec = None
     
     def __init__(self, base_dir, server_type, port, hostname="localhost", central_server_port=None, central_server_host=None):
@@ -45,19 +44,9 @@ class KaLiteServer(object):
         cwd = os.getcwd()
         os.chdir(self.base_dir + "/kalite")
     
-        lexec(self.pyexec() + " manage.py runcherrypyserver host=%s port=%d threads=5 daemonize=true pidfile=%s/kalite/runcherrypyserver.pid" % (self.hostname, self.port, self.base_dir))
+        lexec(sys.executable + " manage.py runcherrypyserver host=%s port=%d threads=5 daemonize=true pidfile=%s/kalite/runcherrypyserver.pid" % (self.hostname, self.port, self.base_dir))
     
         os.chdir(cwd)
-
-
-    def pyexec(self):
-        """Return the path to the python executable"""
-        
-        if not self.__class__._pyexec:   
-            (_,pyexec,_) = lexec("bash " + self.base_dir+"/python.sh", silent=True)
-            self.__class__._pyexec = pyexec[:-1]
-        return self.__class__._pyexec
-
 
     def create_local_settings_file(self, local_settings_file=None):
     
@@ -103,7 +92,7 @@ class KaLiteServer(object):
         cwd = os.getcwd()
         os.chdir(self.base_dir + "/kalite")
         
-        cmd = self.pyexec() + " manage.py " + command + (" " + params_string if params_string else "")
+        cmd = sys.executable + " manage.py " + command + (" " + params_string if params_string else "")
         self.log.debug("Running '%s'" % cmd)
         out = lexec(cmd, input=input)
         
@@ -134,7 +123,6 @@ class KaLiteServer(object):
                     'exit_code': 0,
                 }
         return out        
-    
 
     def install_server(self):
         # Then, make sure to run the installation
