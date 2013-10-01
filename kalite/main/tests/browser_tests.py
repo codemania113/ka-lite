@@ -4,7 +4,7 @@ These use a web-browser, along selenium, to simulate user actions.
 
 import re
 import time
-import unittest
+from django.utils import unittest
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
@@ -30,12 +30,12 @@ class KALiteDistributedBrowserTestCase(BrowserTestCase):
     """Base class for main server test cases.
     They will have different functions in here, for sure.
     """
-    
+
     default_username = "test_student"
     default_password = "socrates"
     default_facility_name = "middle of nowhere"
-    
-    
+
+
     def create_student(self, username=default_username, password=default_password, facility_name=default_facility_name):
         facilities = Facility.objects.filter(name=facility_name)
         facility = facilities[0] if facilities else self.create_facility()
@@ -125,14 +125,14 @@ class KALiteDistributedBrowserTestCase(BrowserTestCase):
         if expect_success:
             self.assertIn(reverse("coach_reports"), self.browser.current_url, "Login browses to coach reports page" )
             self.browser_check_django_message("success", contains="You've been logged in!")
-    
+
     def browser_login_student(self, username, password, facility_name=None, expect_success=True):
         self.browser_login_user(username=username, password=password, facility_name=facility_name, expect_success=expect_success)
         time.sleep(self.max_wait_time/10) # allow time for async messages to load
         if expect_success:
             self.assertIn(reverse("homepage"), self.browser.current_url, "Login browses to homepage" )
             self.browser_check_django_message("success", contains="You've been logged in!")
-    
+
     def browser_logout_user(self):
         if self.browser_is_logged_in():
             # Since logout redirects to the homepage, browse_to will fail (with no good way to avoid).
@@ -439,7 +439,7 @@ class LoadExerciseTest(KALiteDistributedWithFacilityBrowserTestCase):
             if error_list:
                 logging.error("Found JS error(s) while loading path: " + path)
                 for e in error_list:
-                    logging.error(e)    
+                    logging.error(e)
             self.assertFalse(error_list)
 
 

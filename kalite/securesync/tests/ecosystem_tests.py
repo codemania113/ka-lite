@@ -21,13 +21,13 @@ class KALiteEcosystemTestCase(KALiteCentralBrowserTestCase, KALiteDistributedBro
     """
     A utility class for implementing testcases involving an "ecosystem" of KA Lite servers:
     1 central server and two distributed servers, on the same zone.
-    
+
     Subclasses could look at complex syncing scenarios, using the setup provided here.
     """
-    
+
     # TODO(bcipolli) move setup and teardown code to class (not instance);
     #   not sure how to tear down in this case, though...............
-        
+
     def __init__(self, *args, **kwargs):
         self.log = settings.LOG
         self.zip_files = {
@@ -47,28 +47,28 @@ class KALiteEcosystemTestCase(KALiteCentralBrowserTestCase, KALiteDistributedBro
         else:
             import pdb; pdb.set_trace()
         return "http://%s:%d%s" % (self.active_server.hostname, self.active_server.port, absolute_url)
-        
+
     def setup_ports(self):
         """Get the live server port (self), plus three more ports (remotes)"""
         self.port = int(self.live_server_url.split(":")[2])
 
         assert os.environ.get("DJANGO_LIVE_TEST_SERVER_ADDRESS",""), "This testcase can only be run running under the liveserver django test option.  For KA Lite, this should be set up by our TestRunner (which is set up in settings.py)"
-        
+
         # Parse the open ports
         self.open_ports = [int(p) for p in os.environ['DJANGO_LIVE_TEST_SERVER_ADDRESS'].split(":")[1].split("-")]
         if len(self.open_ports) != 2:
             raise Exception("Unable to parse ports. Use a simple range (8000-8080). Used: '%s'" % os.environ['DJANGO_LIVE_TEST_SERVER_ADDRESS'])
-            
+
         # Choose some (but not one that's used for this liveserver)
-        self.open_ports = set(range(self.open_ports[0], self.open_ports[1]+2)) - {self.port,}
+        self.open_ports = set(range(self.open_ports[0], self.open_ports[1]+2)) - set([self.port])
 
     def setUp(self):
         KALiteCentralBrowserTestCase.setUp(self)
         #KALiteDistributedBrowserTestCase.setUp(self)
 
         self.setUpManual()
-    
-    
+
+
     def register_via_browser(self, distributed_server, central_server):
         self.active_server = distributed_server
         self.browser_login_admin()  # total hack, but I avoid multiple inheritance or major refactoring :)
@@ -125,7 +125,7 @@ class KALiteEcosystemTestCase(KALiteCentralBrowserTestCase, KALiteDistributedBro
         zoned_zip_file = zoned_zip_file[5:-1] # prune cruft (leading ">>> '" and trailing "'")
 
         # Install the other two servers
-        ncservers = set(server_types)-{"central",}
+        ncservers = set(server_types) - set(["central"])
         self.log.info("Installing the other servers (%s); please wait." % ncservers)
         kap = KaLiteSelfZipProject(base_dir=self.temp_dir, zip_file=zoned_zip_file, persistent_ports=False)
         kap.mount_project(server_types=ncservers, host="127.0.0.1", port_map=port_map)
@@ -135,7 +135,7 @@ class KALiteEcosystemTestCase(KALiteCentralBrowserTestCase, KALiteDistributedBro
         # Now start all the servers
         for server in self.servers.values():
             server.start_server()
-            
+
         return super(KALiteEcosystemTestCase, self).setUp(*args, **kwargs)
 
     def tearDown(self):
@@ -153,7 +153,7 @@ class KALiteEcosystemTestCase(KALiteCentralBrowserTestCase, KALiteDistributedBro
             return out['stdout']
         else:
             return out
-        
+
     def shell_plus(self, server, commands, expect_success=True):
         """Utility function for calling out to shell_plus, then repackaging the output."""
         out = self.servers[server].shell_plus(commands=commands)
@@ -169,14 +169,14 @@ class KALiteEcosystemTestCase(KALiteCentralBrowserTestCase, KALiteDistributedBro
 @unittest.skipIf("long" in settings.TESTS_TO_SKIP, "Skipping long test")
 class CrossLocalServerSyncTestCase(KALiteEcosystemTestCase):
     """Basic sync test case."""
-    
+
     def check_has_logs(self, server, log_type, count):
         """Check that given server has the number of logs expected, for the given type."""
 
         val = self.shell_plus(server, "%s.objects.all().count()" % log_type)
         self.assertEqual(count, int(val), "Checking that %s has %d %s logs." % (server, count, log_type))
 
-    
+
     def check_has_device(self, server, device):
         """Check that device, zone, and devicezone data exist for the given device on the given server."""
 
@@ -184,7 +184,7 @@ class CrossLocalServerSyncTestCase(KALiteEcosystemTestCase):
         device_id = eval(self.shell_plus(device, "Device.objects.filter(devicemetadata__is_own_device=True)[0].id"))
         zone_id = eval(self.shell_plus(device, "DeviceZone.objects.filter(device='%s')[0].zone.id" % device_id))
 
-        # double eval is a bug to track down ... sometime.                
+        # double eval is a bug to track down ... sometime.
         self.assertEqual(device, eval(eval(self.shell_plus(server, "Device.objects.get(id='%s').name" % device_id))), "Device %s exists on %s" % (device, server))
         self.assertEqual(self.zone_name, eval(self.shell_plus(server, "Device.objects.get(id='%s').get_zone().name" % device_id)), "Zone for %s exists on %s" % (device, server))
 
@@ -196,15 +196,15 @@ class CrossLocalServerSyncTestCase(KALiteEcosystemTestCase):
         n_vlogs = int(self.shell_plus("local2", "VideoLog.objects.all().count()"))
         self.assertTrue(n_elogs > 0, "local2 has more than 0 exercise logs, after running 'generatefakedata'")
 
-        ## Sync local2 to the central server            
+        ## Sync local2 to the central server
         out = self.call_command("local2", "syncmodels")
         self.assertIn("Total errors: 0", out)
-        
+
         # Validate data on central server
         self.check_has_logs(server="central", log_type="ExerciseLog", count=n_elogs)
         self.check_has_logs(server="central", log_type="VideoLog", count=n_vlogs)
         self.check_has_device(server="central", device="local2")
-        
+
         # Validate no data on local
         self.check_has_logs(server="local", log_type="ExerciseLog", count=0)
         self.check_has_logs(server="local", log_type="VideoLog", count=0)
@@ -213,17 +213,17 @@ class CrossLocalServerSyncTestCase(KALiteEcosystemTestCase):
         ## Sync local to the central server (should get local2 data)
         out = self.call_command("local", "syncmodels")
         self.assertIn("Total errors: 0", out)
-        
+
         # Validate data on local
         self.check_has_logs(server="local", log_type="ExerciseLog", count=n_elogs)
         self.check_has_logs(server="local", log_type="VideoLog", count=n_vlogs)
         self.check_has_device(server="local", device="local2")
-        
+
 
         ## Last one: sync local2 to the central server (should get local device)
         out = self.call_command("local2", "syncmodels")
         self.assertIn("Total errors: 0", out)
-        
+
         # Validate data on local2
         self.check_has_logs(server="local", log_type="ExerciseLog", count=n_elogs)
         self.check_has_logs(server="local", log_type="VideoLog", count=n_vlogs)
