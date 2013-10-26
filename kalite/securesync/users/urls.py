@@ -14,4 +14,5 @@ urlpatterns = patterns('securesync.users.views',
 
     url(r'^login/$', 'login', {}, 'login'),
     url(r'^logout/$', 'logout', {}, 'logout'),
+    url(r'^claim_zone_confirm/$', 'claim_zone_confirm', {}, 'claim_zone_confirm'),
 )

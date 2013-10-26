@@ -2,12 +2,14 @@ import copy
 import json
 import re
 import sys
+import urllib
 from annoying.decorators import render_to
 from annoying.functions import get_object_or_None
 
+from django.conf import settings
 from django.contrib import messages
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.management import call_command
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import reverse
 from django.db.models import Sum, Count
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect, Http404, HttpResponseServerError
@@ -171,10 +173,10 @@ def exercise_handler(request, exercise):
         video = topicdata.NODE_CACHE["Video"].get(key, None)
         if not video:
             continue
-            
+
         if not video.get("on_disk", False) and not settings.BACKUP_VIDEO_SOURCE:
             continue
-        
+
         related_videos[key] = copy.copy(video)
         for path in video["paths"]:
             if topic_tools.is_sibling({"path": path, "kind": "Video"}, exercise):
@@ -220,11 +222,18 @@ def homepage(request):
 @check_setup_status
 @render_to("admin_distributed.html")
 def easy_admin(request):
+    localhost_url = "{}:{}{}".format(request.META["REMOTE_ADDR"],
+                                     request.META["REMOTE_PORT"],
+                                     reverse("claim_zone_confirm"))
+    claim_link = "{}://{}?{}".format(settings.SECURESYNC_PROTOCOL,
+                                     settings.CENTRAL_SERVER_HOST,
+                                     urllib.urlencode({'data': localhost_url}))
 
     context = {
         "wiki_url" : settings.CENTRAL_WIKI_URL,
         "central_server_host" : settings.CENTRAL_SERVER_HOST,
         "in_a_zone":  Device.get_own_device().get_zone() is not None,
+        "central_server_claim_link": claim_link,
     }
     return context
 

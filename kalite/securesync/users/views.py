@@ -250,3 +250,6 @@ def logout(request):
         next = "/"
     return HttpResponseRedirect(next)
 
+@distributed_server_only
+def claim_zone_confirm(request):
+    return None # stub just so we have a url we can reverse to

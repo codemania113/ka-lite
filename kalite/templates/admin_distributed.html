@@ -25,14 +25,14 @@ ul {
     width: 250px;
     float: left
 }
-.link { 
+.link {
     padding-left: 25px;
     width: 120px;
 }
 .description {
     width: 100%;
 }
-td.title { 
+td.title {
     padding-top: 25px;
 }
 .green_button {
@@ -49,7 +49,8 @@ td.title {
     {% if in_a_zone %}
     <div style="float:right" class="server-online-only">
         <div class="registered-only">
-            <a class="green_button" href="javascript:force_sync()">{% trans "Sync Now!" %}</a>
+          <a class="green_button" href="javascript:force_sync()">{% trans "Sync Now!" %}</a>
+	    <a class="green_button" href="{{ central_server_claim_link }}">{% trans "Claim Zone" %}</a>
         </div>
     </div>
     {% endif %}
@@ -81,7 +82,7 @@ td.title {
             <td class="desc">{% trans "Summary stats for this installation" %}</td>
         </tr>
         {% endif %}
-        
+
         <tr class="client-online-only">
             <td class="title" colspan="2">
                 <h2>{% trans "(Online) help documents" %}</h2>
@@ -97,7 +98,7 @@ td.title {
         </tr>
 
         {% if user.is_superuser and settings.DEBUG %}{% comment "Django-admins and in debug mode" %}{% endcomment %}
-        
+
         <tr>
             <td class="title" colspan="2">
                 <h2>{% trans "Advanced User Tools" %}</h2>
