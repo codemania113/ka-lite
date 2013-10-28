@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import ModelForm
+from django.forms import Form, ModelForm
 
 from central.models import Organization, OrganizationInvitation
 
@@ -7,6 +7,11 @@ class OrganizationForm(ModelForm):
     class Meta:
         model = Organization
         fields = ('name', 'description', 'url', 'number', 'address', 'country')
+
+
+class OrganizationSelectForm(Form):
+    org = forms.ModelChoiceField(Organization.objects.all())
+    callback_url = forms.CharField(required=False, widget=forms.HiddenInput)
 
 
 class OrganizationInvitationForm(ModelForm):

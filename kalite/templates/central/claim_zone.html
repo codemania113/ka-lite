@@ -1,0 +1,9 @@
+{% extends "central/base.html" %}
+
+{% block content %}
+<form method="post" action="{{ request.path }}"> <!-- explicitly say action due to get parameter already in URL -->
+  {% csrf_token %}
+  {{ form.as_p }}
+  <input type="submit" value="confirm"/>
+</form>
+{% endblock %}

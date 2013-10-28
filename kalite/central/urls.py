@@ -43,16 +43,17 @@ urlpatterns += patterns('',
 )
 
 urlpatterns += patterns('central.views',
-    url(r'^$', 'homepage', {}, 'homepage'), 
+    url(r'^$', 'homepage', {}, 'homepage'),
     url(r'^content/(?P<page>\w+)/', 'content_page', {}, 'content_page'), # Example of a new landing page
     url(r'^wiki/(?P<path>.*)$', 'content_page', {"page": "wiki_page", "wiki_site": settings.CENTRAL_WIKI_URL}, 'wiki'),
 
-    url(r'^delete_admin/(?P<org_id>\w+)/(?P<user_id>\w+)/$', 'delete_admin', {}, 'delete_admin'), 
-    url(r'^delete_invite/(?P<org_id>\w+)/(?P<invite_id>\w+)/$', 'delete_invite', {}, 'delete_invite'), 
+    url(r'^delete_admin/(?P<org_id>\w+)/(?P<user_id>\w+)/$', 'delete_admin', {}, 'delete_admin'),
+    url(r'^delete_invite/(?P<org_id>\w+)/(?P<invite_id>\w+)/$', 'delete_invite', {}, 'delete_invite'),
     url(r'^accounts/', include(registration.urls)),
 
     # Organization
     url(r'^organization/$', 'org_management', {}, 'org_management'),
+    url(r'^organization/claim_zone/$', 'org_claim_zone', {}, 'org_claim_zone'),
     url(r'^organization/(?P<org_id>\w+)/$', 'organization_form', {}, 'organization_form'),
     url(r'^organization/delete/(?P<org_id>\w+)/$', 'delete_organization', {}, 'delete_organization'),
     url(r'^organization/invite_action/(?P<invite_id>\w+)/$', 'org_invite_action', {}, 'org_invite_action'),
