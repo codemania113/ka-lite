@@ -222,9 +222,7 @@ def homepage(request):
 @check_setup_status
 @render_to("admin_distributed.html")
 def easy_admin(request):
-    localhost_url = "{}:{}{}".format(request.META["REMOTE_ADDR"],
-                                     request.META["REMOTE_PORT"],
-                                     reverse("claim_zone_confirm"))
+    localhost_url = request.build_absolute_uri(reverse("claim_zone_confirm"))
     claim_link = "{}://{}?{}".format(settings.SECURESYNC_PROTOCOL,
                                      settings.CENTRAL_SERVER_HOST,
                                      urllib.urlencode({'data': localhost_url}))
