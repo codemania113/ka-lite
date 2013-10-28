@@ -17,7 +17,7 @@ def gen_claim_token(org_id, expires=None, type='claim_zone'):
     return token
 
 def verify_token(token):
-    key = Device.get_own_device().get_key()
+    key = Device.get_central_server().get_key()
     signature = token.pop('signature')
     return key.verify(str(token), signature)
 
