@@ -249,18 +249,6 @@ def update_translations(lang_codes=None,
             package_metadata[lang_code]["kalite_ntranslations"]  = kalite_metadata["approved_translations"]
             package_metadata[lang_code]["kalite_nphrases"]       = kalite_metadata["phrases"]
 
-            try:
-                kalite_registration_mo_file = download_latest_translations(
-                    lang_code=lang_code,
-                    cache_file=os.path.join(CROWDIN_CACHE_DIR, "kalite-reg-%s.mo" % lang_code) if settings.DEBUG else None,
-                    bare=True,
-                    combine_with_po_file=kalite_po_file,
-                )
-            except requests.HTTPError:
-                logging.info("Skipping registration mo file.")
-            else:
-                kalite_po_file = kalite_registration_mo_file
-
             # Download Khan Academy translations too
             logging.info("Downloading Khan Academy translations...")
             combined_po_file = download_latest_translations(
@@ -273,7 +261,18 @@ def update_translations(lang_codes=None,
                 download_type="ka",
             )
 
+            logging.info('Downloading library translations...')
+            try:
+                combined_po_file = update_library_translations(
+                    lang_code=lang_code,
+                    cache=settings.DEBUG,
+                    combine_with_po_file=combined_po_file,
+                )
+            except requests.HTTPError:
+                logging.info('No library translations found for %s' % lang_code)
+
             # we have the po file; now
+            logging.info('Building metadata...')
             ka_metadata = get_po_metadata(combined_po_file)
             package_metadata[lang_code]["approved_translations"] = ka_metadata["approved_translations"]
             package_metadata[lang_code]["phrases"]               = ka_metadata["phrases"]
@@ -291,6 +290,39 @@ def update_translations(lang_codes=None,
 
     return package_metadata
 
+
+def update_library_translations(lang_code, cache, combine_with_po_file=None):
+    libraries = libraries_with_translations()
+    import pdb; pdb.set_trace()
+
+    for library in libraries:
+        lib_path = os.path.join(CROWDIN_CACHE_DIR, 'libraries', library, lang_code)
+        lib_file = os.path.join(lib_path, 'django.po')
+        if not cache or not os.path.exists(lib_file):
+            ensure_dir(lib_path)
+            download_library_translation(library, lang_code, lib_file)
+        po_file = extract_new_po(lib_path, lang=lang_code, combine_with_po_file=combine_with_po_file)
+
+    return po_file
+
+def download_library_translation(libpath, lang_code, out):
+
+    template_url = "https://raw.github.com/learningequality/ka-lite/v0.10.2/{libpath}/locale/{lang}/LC_MESSAGES/django.po"
+    full_url = template_url.format(libpath=libpath, lang=lang_code)
+
+    resp = requests.get(full_url)
+    resp.raise_for_status()     # let higher up functions handle this
+
+    with open(out, 'w') as f:
+        f.write(resp.content)
+
+
+def libraries_with_translations(jsonpath=None):
+    if not jsonpath:
+        jsonpath = os.path.join(settings.DATA_PATH_SECURE, 'i18n', 'python_package_translation_files.json')
+
+    with open(jsonpath) as f:
+        return json.loads(f.read())
 
 def upgrade_old_schema():
     """Move srt files from static/srt to locale directory and file them by language code, delete any old locale directories"""
@@ -335,8 +367,6 @@ def download_latest_translations(project_id=settings.CROWDIN_PROJECT_ID,
                                  cache_file=None,
                                  combine_with_po_file=None,
                                  rebuild=True,
-                                 bare=False,
-                                 download_url=None,
                                  download_type=None):
     """
     Download latest translations from CrowdIn to corresponding locale
@@ -348,20 +378,14 @@ def download_latest_translations(project_id=settings.CROWDIN_PROJECT_ID,
     - project_key -- the secret key used for accessing the po files in CrowdIn
     - cache_file -- the location of a cached zip file. Stores the downloaded mo/zip file in this location if nonexistent.
     - rebuild -- ask CrowdIn to rebuild translations. Default is False.
-    - bare -- Download a single mo/po file
-    - download_url -- the url where to download the translation/s
     - download_type -- whether it is a ka or ka_lite. Default is None, meaning ka_lite.
 
     """
     lang_code = lcode_to_ietf(lang_code)
 
     tmp_dir_path = tempfile.mkdtemp()
-    if bare:
-        mo_path = download_mo(lang_code, cache_file)
-        extract_to_tmp_path(mo_path, path=tmp_dir_path)
-    else:
-        zip_path = download_zip(lang_code, project_id, project_key, cache_file, rebuild=rebuild)
-        extract_to_tmp_path(zip_path, path=tmp_dir_path)
+    zip_path = download_zip(lang_code, project_id, project_key, cache_file, rebuild=rebuild)
+    extract_to_tmp_path(zip_path, path=tmp_dir_path)
 
     po_file = extract_new_po(tmp_dir_path, combine_with_po_file=combine_with_po_file, lang=lang_code, filter_type=download_type)
 
@@ -382,29 +406,6 @@ def extract_to_tmp_path(src, path=None, zip=True):
         shutil.copy(src, path)
 
     return path
-
-
-def download_mo(lang_code, download_path, force=False):
-    if os.path.exists(download_path) and not force:
-        logging.info("Zip file for %s already downloaded. Skipping..." % lang_code)
-        return download_path
-    else:
-        download_url = "https://raw.github.com/learningequality/ka-lite/v0.10.2/kalite/registration/locale/{}/LC_MESSAGES/django.po"
-        download_url = download_url.format(lang_code)
-        resp = requests.get(download_url)
-
-        try:
-            resp.raise_for_status()
-        except requests.HTTPError as e:
-            if resp.status == 404:
-                logging.info('No mo file with that language found.')
-            raise
-        else:
-            if download_path:
-                with open(download_path, 'w') as f:
-                    f.write(resp.content)
-                    logging.info("mo file written to %s" % download_path)
-
 
 
 def download_zip(lang_code, project_id, project_key, download_path, rebuild=True, force=False):
