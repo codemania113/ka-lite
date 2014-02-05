@@ -15,6 +15,7 @@ Other values set here:
 """
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
+from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
 import settings
@@ -47,11 +48,11 @@ def set_default_language(request, lang_code, global_set=False):
 
     set_request_language(request, lang_code)
 
-def set_request_language(request, lang_code):
+def set_request_language(request, lang_code, persist=True):
     # each request can get the language from the querystring, or from the currently set session language
 
     lang_code = lcode_to_django_lang(lang_code)
-    if lang_code != request.session.get(settings.LANGUAGE_COOKIE_NAME):
+    if lang_code != request.session.get(settings.LANGUAGE_COOKIE_NAME) and persist:
         logging.debug("setting session language to %s" % lang_code)
         # Just in case we have a db-backed session, don't write unless we have to.
         request.session[settings.LANGUAGE_COOKIE_NAME] = lang_code
@@ -109,7 +110,7 @@ def set_language_data(request):
         or request.session.get(settings.LANGUAGE_COOKIE_NAME) \
         or request.session.get("default_language")
 
-    set_request_language(request, lang_code=cur_lang)
+    set_request_language(request, lang_code=cur_lang, persist=False)
 
 
 class SessionLanguage:
