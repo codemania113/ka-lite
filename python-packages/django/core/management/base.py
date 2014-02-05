@@ -134,6 +134,11 @@ class BaseCommand(object):
             help='Print traceback on exception'),
         make_option('--auto-pdb', action='store_true',
             help='Enter PDB on exception'),
+        make_option('--output-language',
+                    action='store',
+                    dest='output_language',
+                    default='',
+                    help='The language to use for inline gettext translations.'),
     )
     help = ''
     args = ''
@@ -233,6 +238,10 @@ class BaseCommand(object):
             from django.utils import translation
             saved_lang = translation.get_language()
             translation.activate('en-us')
+
+        if options['output_language']:
+            from django.utils import translation
+            translation.activate(options['output_language'])
 
         try:
             if self.requires_model_validation:
