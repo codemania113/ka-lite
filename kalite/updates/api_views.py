@@ -150,7 +150,7 @@ def start_video_download(request):
         video_files_needing_model_update = VideoFile.objects.filter(download_in_progress=False, youtube_id__in=chunk).exclude(percent_complete=100)
         video_files_needing_model_update.update(percent_complete=0, cancel_download=False, flagged_for_download=True)
 
-    force_job("videodownload", _("Download Videos"))
+    force_job("videodownload", _("Download Videos"), cmdargs=['--output-language', request.language])
     return JsonResponse({})
 
 
