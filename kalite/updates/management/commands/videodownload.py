@@ -147,5 +147,5 @@ class Command(UpdatesDynamicCommand):
             })
 
         except Exception as e:
-            self.cancel(stage_status="error", notes=_("Error: %(error_msg)") % {"error_msg": unicode(e)})
+            self.cancel(stage_status="error", notes=_("Error: %(error_msg)s") % {"error_msg": unicode(e)})
             raise
