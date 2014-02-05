@@ -262,7 +262,7 @@ def exercise_handler(request, exercise, prev=None, next=None, **related_videos):
     """
     Display an exercise
     """
-    lang = request.session[settings.LANGUAGE_COOKIE_NAME]
+    lang = request.session.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
     exercise_root = os.path.join(settings.STATIC_ROOT, "js", "khan-exercises", "exercises")
     exercise_file = exercise["slug"] + ".html"
     exercise_template = exercise_file

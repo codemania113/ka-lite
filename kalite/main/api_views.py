@@ -335,7 +335,7 @@ def status(request):
         "is_admin": request.is_admin,
         "is_django_user": request.is_django_user,
         "points": 0,
-        "current_language": request.session[settings.LANGUAGE_COOKIE_NAME],
+        "current_language": request.session.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE),
         "messages": message_dicts,
     }
     # Override properties using facility data
