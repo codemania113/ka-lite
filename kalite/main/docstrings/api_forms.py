@@ -2,7 +2,9 @@ from django import forms
 
 from .topic_tools import get_node_cache
 
-
+"""
+An example of docstring
+"""
 class ExerciseLogForm(forms.Form):
     """Form that represents the schema for data API requests"""
 
