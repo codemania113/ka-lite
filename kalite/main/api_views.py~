@@ -70,7 +70,7 @@ def save_video_log(request):
         raise ValidationError(form.errors)
     data = form.data
     user = request.session["facility_user"]
-    try: 
+    try:
         videolog = VideoLog.update_video_log(
             facility_user=user,
             video_id=data["video_id"],
