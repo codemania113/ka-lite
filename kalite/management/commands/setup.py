@@ -230,11 +230,8 @@ class Command(BaseCommand):
             sys.stdout.write("(Re)moving database file to temp location, starting clean install.  Recovery location: %s\n" % dest_file)
             shutil.move(database_file, dest_file)
 
-        # Got this far, it's OK to stop the server.
-        import serverstop
-
         # Should clean_pyc for (clean) reinstall purposes
-        call_command("clean_pyc", interactive=False, verbosity=options.get("verbosity"))
+        call_command("clean_pyc", interactive=False, verbosity=options.get("verbosity"), path=os.path.join(settings.PROJECT_PATH, ".."))
 
         # Migrate the database
         call_command("syncdb", interactive=False, verbosity=options.get("verbosity"))
@@ -246,7 +243,7 @@ class Command(BaseCommand):
             call_command("generatekeys", verbosity=options.get("verbosity"))
             call_command("initdevice", hostname, description, verbosity=options.get("verbosity"))
 
-        else:
+        #else:
             # Device exists; load data if required.
             #
             # Hackish, as this duplicates code from initdevice.
@@ -256,8 +253,8 @@ class Command(BaseCommand):
             #    sys.stdout.write("Loading zone data from '%s'\n" % InitCommand.data_json_file)
             #    load_data_for_offline_install(in_file=InitCommand.data_json_file)
 
-            confirm_or_generate_zone()
-            initialize_facility()
+        #    confirm_or_generate_zone()
+        #    initialize_facility()
 
         # Create the admin user
         if password:  # blank password (non-interactive) means don't create a superuser
