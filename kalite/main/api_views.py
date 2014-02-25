@@ -333,8 +333,7 @@ def status(request):
 
 def getpid(request):
     """
-    Gets the process id of a process,
-    and kills zombie processes.
+    Gets the process id of a process
     """
     #who am I?  return the PID; used to kill the webserver process if the PID file is missing
     try:
